@@ -1,7 +1,7 @@
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
-
+ 
 #define R 0
 #define W 1
 void pipelineprime(int fd);
