@@ -3,7 +3,6 @@
 #include "user/user.h"
 #include "kernel/fs.h"
 
-
 #define MaxPathSize 512
 #define MaxNameSize 64
 
