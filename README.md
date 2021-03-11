@@ -2,5 +2,5 @@
 this is for RISC-V.  
 my solutions and a little ideas.
 
-## Lab Utilities  
-## Lab System Calls
+- [x] Lab Utilities  
+- [x] Lab System Calls
