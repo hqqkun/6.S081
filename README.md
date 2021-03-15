@@ -4,5 +4,5 @@ my solutions and a little ideas.
 
 - [x] Lab Utilities  
 - [x] Lab System Calls  
-- [ ] Lab Page Tables   
+- [x] Lab Page Tables 
 
