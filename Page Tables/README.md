@@ -30,7 +30,7 @@ print_page_table(pagetable_t pagetable,int layer)
 	pte_t pte;
 	uint64 child;
 	/* 可以用循环代替 switch case */
-    /* 512 是每个页表含有的 pte 个数 */
+	/* 512 是每个页表含有的 pte 个数 */
 	for(int i = 0; i != 512; ++i){
 		pte = pagetable[i];
 		if(pte & PTE_V){
