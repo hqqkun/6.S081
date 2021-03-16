@@ -1,4 +1,5 @@
-# *Write in Chinese*  
+# *Write in Chinese*
+
 # Lab Page Tables
 
 
@@ -31,7 +32,7 @@ print_page_table(pagetable_t pagetable,int layer)
 	pte_t pte;
 	uint64 child;
 	/* 可以用循环代替 switch case */
-	/* 512 是每个页表含有的 pte 个数 */
+    	/* 512 是每个页表含有的 pte 个数 */
 	for(int i = 0; i != 512; ++i){
 		pte = pagetable[i];
 		if(pte & PTE_V){
@@ -130,7 +131,77 @@ ukvminit(void)
 	p->kstack = va;
 ```
 
+​		分析 kernel/vm.c 中 kvminithart() ，该函数是将页表寄存器初始化。首先将内核页表载入 satp 寄存器（w_satp），随后刷新（sfence_vma）。
 
+```C
+// Switch h/w page table register to the kernel's page table,
+// and enable paging.
+void
+kvminithart()
+{
+  w_satp(MAKE_SATP(kernel_pagetable));
+  sfence_vma();
+}
+```
 
-### to be continued.
+ 		因此，在本实验中，若进程进入内核，则应当将 satp 寄存器赋予该进程的内核页表。根据指导书，修改 scheduler() 函数。
+
+```c
+/* 在 kernel/proc.c 中添加 */
+/* in scheduler() */
+...
+if(p->state == RUNNABLE) {
+    ...
+    c->proc = p;
+    
+    w_satp(MAKE_SATP(p->kernel_page_table));
+    sfence_vma();
+    swtch(&c->context, &p->context);
+    /* 要求没有进程运行的时候，使用 kernel_pagetable，但我不懂 kvminithart() 为什么加在这里 */
+    kvminithart();
+    ...
+}
+```
+
+进程退出的时候时候，需要释放 PCB，在 kernel/proc.c 中的 freeproc() 进行，所以在这添加释放进程页表的功能。
+
+```c
+/* free user's kernel page table */
+/* 释放用户内核页表 */
+/* 我释放了叶页表的物理内存，虽然实验书里要求不能释放，但我 make grade 的时候发现成绩并没有变化 */
+/* 递归实现 */
+static
+void
+freeukvm(pagetable_t kernel, int layer)
+{ 
+  	pte_t pte;
+  	uint64 child;
+  	if(layer == 2)
+  		goto Done;
+  	for (int i = 0; i != 512; ++i) {
+  		pte = kernel[i];
+		if (pte & PTE_V) {
+			child = PTE2PA(pte);
+			freeukvm((pagetable_t)child, layer + 1);
+		}
+	}
+Done:
+	kfree((void*)kernel);
+}
+```
+
+```C
+/* 在 kernel/vm.c */
+/* 根据注释可以看到，这是关于进程内核栈的映射，所以将源代码改写为使用每个进程的内核页表 */
+uint64
+kvmpa(uint64 va)
+{
+ ...
+  /* myproc()->kernel_page_table */
+  pte = walk(myproc()->kernel_page_table, va, 0);
+ ...
+}
+```
+
+### 2.3	Simplify copyin/copyinstr
 
