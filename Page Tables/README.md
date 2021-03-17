@@ -168,7 +168,6 @@ if(p->state == RUNNABLE) {
 ```c
 /* free user's kernel page table */
 /* 释放用户内核页表 */
-/* 我释放了叶页表的物理内存，虽然实验书里要求不能释放，但我 make grade 的时候发现成绩并没有变化 */
 /* 递归实现 */
 static
 void
