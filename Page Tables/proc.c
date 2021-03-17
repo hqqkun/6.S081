@@ -47,8 +47,6 @@ ukvminit(void)
 }
 
 /* free user's kernel page table */
-/* I do free the leaf physical memory pages, beacuse I really don't know */
-/* why the book says no */
 static
 void
 freeukvm(pagetable_t kernel, int layer)
