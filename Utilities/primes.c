@@ -5,14 +5,13 @@
 #define R 0
 #define W 1
 void pipelineprime(int fd);
-void redirect(int k,int pipe[]);
+void redirect(int k,int* pipe);
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
 	int write_pipe[2];
-	if(pipe(write_pipe) < 0)
+	if (pipe(write_pipe) < 0)
 		exit(1);
-	if(!fork()){
+	if (!fork()) {
 		// child process
 		redirect(R,write_pipe);
 		pipelineprime(R);
@@ -21,7 +20,7 @@ int main(int argc, char const *argv[])
 
 	// father process
 	redirect(W,write_pipe);
-	for(int num = 2; num != 36; ++num)
+	for (int num = 2; num != 36; ++num)
 		write(W,&num,sizeof(int));
 
 	close(W);
@@ -30,21 +29,18 @@ int main(int argc, char const *argv[])
 }
 
 /* match stdin or stdout to pipe fd and close them. */
-void redirect(int k,int pipe[])
-{
+void redirect(int k,int pipe[]) {
 	close(k);
 	dup(pipe[k]);
 	close(pipe[R]);
 	close(pipe[W]);
-
 }
 
 /* a recursive function that will fork a child 
    process to sieve the next prime number. */
 /* we guarantee the current process will 
    receive at least one number from it's father by reading fd */
-void pipelineprime(int fd)
-{
+void pipelineprime(int fd) {
 	/* stage_prime means other numbers will be sieved by it. */
 	int stage_prime,prime;
 	/* used to transmit numbers to it's child */
@@ -57,19 +53,19 @@ void pipelineprime(int fd)
 	printf("prime %d\n",stage_prime);
 
 	/* read until there is nothing to read */
-	while(read(fd,&prime,sizeof(int)) != 0 ){
-		if((prime % stage_prime) != 0){
+	while (read(fd,&prime,sizeof(int)) != 0 ) {
+		if ((prime % stage_prime) != 0) {
 			// might find a prime
 			++prime_count;
-			if(prime_count == 1){
+			if (prime_count == 1) {
 				/* fork a child process only if we find the first 
 				   number that cannot divided by stage_prime. */ 
-				if(pipe(write_pipe) < 0)
+				if (pipe(write_pipe) < 0)
 					exit(1);
 				else
 					pipe_flag = 1;
 				
-				if(!fork()){
+				if (!fork()) {
 					/* child */
 					redirect(R,write_pipe);
 					pipelineprime(R);
@@ -82,7 +78,7 @@ void pipelineprime(int fd)
 		}
 	}
 	close(fd);
-	if(pipe_flag){
+	if (pipe_flag) {
 		close(W);
 		wait((int*)0);
 	}
