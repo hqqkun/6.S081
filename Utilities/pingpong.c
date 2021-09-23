@@ -1,64 +1,45 @@
 #include "kernel/types.h"
-#include "kernel/stat.h"
 #include "user/user.h"
- 
+
 #define R 0
 #define W 1
 
-int main(int argc,char* argv[])
+int main(int argc, char const *argv[])
 {
-	int child_read[2];
-	int parent_read[2];
-	char buffer[2];
+	int ping[2];
+	int pong[2];
+	if (pipe(ping) != 0) {
+		exit(1);
+	}
+	if (pipe(pong) != 0) {
+		exit(1);
+	} 
+
+	int childId = fork();
+	if (childId < 0) {
+		exit(1);
+	}
+	if (!childId) {
+		// child process
+		char cc;
+		read(ping[R], (void*)&cc, 1);
+		printf("%d: received ping\n", getpid());
+		cc = 'C';
+		write(pong[W], (void*)&cc, 1);
+
+		close(ping[R]);
+		close(pong[W]);
+
+		exit(0);
+	}
+	// parent process
+	char c = 'P';
+	write(ping[W], (void*)&c, 1);
+	read(pong[R], (void*)&c, 1);
+	printf("%d: received pong\n", getpid());
+
+	close(ping[W]);
+	close(pong[R]);
 	
-	if(pipe(child_read) < 0 ){
-		fprintf(2,"error.");
-		exit(1);
-	}
-	else if(pipe(parent_read) < 0){
-		fprintf(2,"error.");
-		exit(1);
-	}
-	else{
-		int temp = fork();
-		if(temp < 0)
-			exit(1);
-		else if(!temp){
-		/* child process read and write to parent
-		   close none use fd, match stdin to child_read */
-		close(R);
-		dup(child_read[R]);
-		close(child_read[R]);
-		close(child_read[W]);
-		close(parent_read[R]);
-
-		read(R,buffer,1);
-		printf("%d: received ping\n",getpid());
-		write(parent_read[W],buffer,1);
-
-		close(R);
-		close(parent_read[W]);
-		exit(0);
-		}
-		
-		else{
-		/* father write and read from child 
-		   close none use fd, match stdin to parent_read */ 
-		close(R);
-		dup(parent_read[R]);
-		close(parent_read[R]);
-		close(parent_read[W]);
-		close(child_read[R]);
-		
-		write(child_read[W],buffer,1);
-		read(R,buffer,1);
-		printf("%d: received pong\n",getpid());
-
-		close(R);
-		close(child_read[W]);
-		exit(0);
-		}
-	}
+	exit(0);
 }
-		
-		
