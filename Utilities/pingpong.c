@@ -4,8 +4,7 @@
 #define R 0
 #define W 1
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
 	int ping[2];
 	int pong[2];
 	if (pipe(ping) != 0) {
