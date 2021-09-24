@@ -1,4 +1,4 @@
-# MIT_OS_6.S081
+# 6.S081
 this is XV6 for RISC-V.  
 my solutions and little ideas.
 
