@@ -22,14 +22,14 @@ static void freeproc(struct proc *p);
 extern char trampoline[]; // trampoline.S
 
 // number of processes whose state is not UNUESD 
-void numproc(uint64* num)
-{
-	int count = 0;
-	struct proc *p;
-	for(p = proc;p < &proc[NPROC]; ++p)
-		if(p->state != UNUSED)
-			++count;
-  *num = count;
+uint64 
+procNum(void) {
+    uint64 procNum = 0;
+    for (int i = 0; i != NPROC; ++i) {
+        if (proc[i].state != UNUSED) 
+            ++procNum;
+    }
+    return procNum;
 }
 
 // initialize the proc table at boot time.
