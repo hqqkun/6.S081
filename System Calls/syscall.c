@@ -134,7 +134,7 @@ static uint64 (*syscalls[])(void) = {
 };
 
 /* an array of syscall names to be printed */
-static char* syscallnames[] = {
+static const char* syscallnames[] = {
 	0,
 	"fork",
 	"exit",
@@ -162,8 +162,7 @@ static char* syscallnames[] = {
 };
 
 void
-syscall(void)
-{
+syscall(void) {
   int num;
   struct proc *p = myproc();
 
@@ -172,8 +171,8 @@ syscall(void)
     p->trapframe->a0 = syscalls[num]();
     
     /* check the trace mask */
-    if( (1 << num) & p->trace_mask)
-    	printf("%d: syscall %s -> %d\n",p->pid,syscallnames[num],p->trapframe->a0 );
+    if ((1 << num) & p->traceMask)
+    	printf("%d: syscall %s -> %d\n", p->pid,syscallnames[num], p->trapframe->a0 );
     }
     else {
     printf("%d %s: unknown sys call %d\n",
