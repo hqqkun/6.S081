@@ -7,6 +7,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "sysinfo.h"
+
 uint64
 sys_exit(void)
 {
@@ -97,32 +98,28 @@ sys_uptime(void)
 }
 
 uint64
-sys_trace(void)
-{
-  int trace_mask;
-  if(argint(0,&trace_mask) < 0)
-    return -1;
+sys_trace(void) {
   struct proc *p = myproc();
-  p->trace_mask = trace_mask;
+  if (argint(0, &(p->traceMask)) < 0) {
+    return -1;
+  }
   return 0;
-} 
-
-
+}
 
 uint64
-sys_sysinfo(void)
-{
-  struct sysinfo tmp;
-  uint64 user_addr;
-  struct proc *p = myproc();
+sys_sysinfo(void) {
 
-  if(argaddr(0,&user_addr) < 0)
-    return -1;
-  num_free_mem(&(tmp.freemem));
-  numproc(&(tmp.nproc));
+    uint64 userAddr = 0;
+    if (argaddr(0, &userAddr) < 0) {
+        return -1;
+    }
 
-if(copyout(p->pagetable,user_addr,(char*)&tmp,sizeof(struct sysinfo)) < 0)
-  return -1;
+    struct proc *p = myproc();
+    struct sysinfo info;
+    info.freemem = numFreeMem();
+    info.nproc = procNum();
 
-	return 0;
+    if (copyout(p->pagetable, userAddr, (char*)&info, sizeof(info)) < 0) 
+        return -1;
+    return 0;
 }
