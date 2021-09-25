@@ -24,17 +24,17 @@ struct {
 } kmem;
 
 // the number of bytes of free memory
-void 
-num_free_mem(uint64 *free_mem)
-{
-  uint64 chunks = 0;
-  struct run* r = kmem.freelist;
-  while(r){
-    ++chunks;
-    r = r->next;
-  }
-  /* a free chunk has 4k bytes */
- *free_mem = chunks << 12;
+uint64 numFreeMem(void) {
+    uint64 freePageNum = 0;
+    const struct run *r;
+
+    acquire(&kmem.lock);
+    r = kmem.freelist;
+    for(; r; r = r->next)
+        ++freePageNum;
+    release(&kmem.lock);
+    // every page is 4K bytes.
+    return freePageNum << 12;
 }
 
 void
