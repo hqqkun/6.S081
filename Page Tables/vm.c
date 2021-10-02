@@ -133,9 +133,8 @@ kvmpa(uint64 va)
   uint64 off = va % PGSIZE;
   pte_t *pte;
   uint64 pa;
-  struct proc* proc = myproc();
-
-  pte = walk(proc->kernel_page_table, va, 0);
+  
+  pte = walk(myproc()->kernelPageTable, va, 0);
   if(pte == 0)
     panic("kvmpa");
   if((*pte & PTE_V) == 0)
@@ -380,26 +379,8 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 // Copy len bytes to dst from virtual address srcva in a given page table.
 // Return 0 on success, -1 on error.
 int
-copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
-{
-	return copyin_new(pagetable, dst, srcva, len);
-  uint64 n, va0, pa0;
-
-  while(len > 0){
-    va0 = PGROUNDDOWN(srcva);
-    pa0 = walkaddr(pagetable, va0);
-    if(pa0 == 0)
-      return -1;
-    n = PGSIZE - (srcva - va0);
-    if(n > len)
-      n = len;
-    memmove(dst, (void *)(pa0 + (srcva - va0)), n);
-
-    len -= n;
-    dst += n;
-    srcva = va0 + PGSIZE;
-  }
-  return 0;
+copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len) {
+    return copyin_new(pagetable, dst, srcva, len);
 }
 
 // Copy a null-terminated string from user to kernel.
@@ -407,90 +388,101 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 // until a '\0', or max.
 // Return 0 on success, -1 on error.
 int
-copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
-{
-  
-  return copyinstr_new(pagetable, dst, srcva, max);
-  
-  uint64 n, va0, pa0;
-  int got_null = 0;
+copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max) {
+    return copyinstr_new(pagetable, dst, srcva, max);
+}
 
-  while(got_null == 0 && max > 0){
-    va0 = PGROUNDDOWN(srcva);
-    pa0 = walkaddr(pagetable, va0);
-    if(pa0 == 0)
-      return -1;
-    n = PGSIZE - (srcva - va0);
-    if(n > max)
-      n = max;
-
-    char *p = (char *) (pa0 + (srcva - va0));
-    while(n > 0){
-      if(*p == '\0'){
-        *dst = '\0';
-        got_null = 1;
-        break;
-      } else {
-        *dst = *p;
-      }
-      --n;
-      --max;
-      p++;
-      dst++;
+/*--------------------------------------------------------------------*/
+/* begin pgtbl lab */
+static void printPageTable(pagetable_t pagetable) {
+    static int layer = 0;
+    pte_t pte;
+    uint64 child;
+    for (int i = 0; i != 512; ++i) {
+        pte = pagetable[i];
+        if(pte & PTE_V){
+            switch(layer){
+                case 2: printf(".. ");
+                case 1: printf(".. ");
+                case 0: printf(".. ");
+            }
+            printf("%d: pte %p pa %p\n",i,(void*)pte,(void*)PTE2PA(pte));
+            
+            if (layer == 2)
+                continue;
+            
+            child = PTE2PA(pte);
+            ++layer;
+            printPageTable((pagetable_t)child);
+            --layer;
+        }
     }
-
-    srcva = va0 + PGSIZE;
-  }
-  if(got_null){
-    return 0;
-  } else {
-    return -1;
-  }
 }
-/* ------------------------------------------------------------ */
-/* Lab Page Tables */
-/* recursive function */
-static void 
-print_page_table(pagetable_t pagetable,int layer)
-{
-	pte_t pte;
-	uint64 child;
-
-	for(int i = 0; i != 512; ++i){
-		pte = pagetable[i];
-		if(pte & PTE_V){
-			switch(layer){
-				case 2: printf(".. ");
-				case 1: printf(".. ");
-				case 0: printf(".. ");
-			}
-			printf("%d: pte %p pa %p\n",i,(void*)pte,(void*)PTE2PA(pte) );
-			
-			if(layer == 2)
-				continue;
-			
-			child = PTE2PA(pte);
-			print_page_table((pagetable_t)child,layer + 1);
-		}
-	}
-
-}
-void vmprint(pagetable_t pagetable)
-{
-	printf("page table %p\n",pagetable);
-	print_page_table(pagetable,0);
+void vmprint(pagetable_t pagetable) {
+    printf("page table %p\n", pagetable);
+    printPageTable(pagetable);
 }
 
-/* map ukvm 0 ~ PLIC with uvm 0 ~ PLIC */
-void
-map_uvm_ukvm(struct proc *np, uint64 index)
-{
-	pte_t* user = 0;
-	pte_t* kernel = 0;
-  	for(uint64 va = index; va < np->sz; va += PGSIZE){
-  		user = walk(np->pagetable, va, 0);
-  		kernel = walk(np->kernel_page_table, va, 1);
-  		*kernel = (*user) & ~PTE_U;
-  	}
+pagetable_t ukvmInit(void) {
+    pagetable_t kernel = uvmcreate();
+    if (kernel == 0)
+      return 0;
+    mappages(kernel, UART0, PGSIZE, UART0, PTE_R | PTE_W);
+    mappages(kernel, VIRTIO0, PGSIZE, VIRTIO0, PTE_R | PTE_W);
+    mappages(kernel, PLIC, 0x400000, PLIC, PTE_R | PTE_W);
+    mappages(kernel, KERNBASE, (uint64)etext-KERNBASE, KERNBASE, PTE_R | PTE_X);
+    mappages(kernel, (uint64)etext, PHYSTOP-(uint64)etext, (uint64)etext, PTE_R | PTE_W);
+    mappages(kernel, TRAMPOLINE, PGSIZE, (uint64)trampoline, PTE_R | PTE_X);
+    return kernel;
 }
-/* ------------------------------------------------------------ */
+
+void freeukvm(pagetable_t kernel) {
+    static int layer;
+    pte_t pte;
+    uint64 child;
+    if(layer == 2)
+        goto Done;
+    for (int i = 0; i != 512; ++i) {
+        pte = kernel[i];
+        if (pte & PTE_V) {
+            child = PTE2PA(pte);
+            ++layer;
+            freeukvm((pagetable_t)child);
+            --layer;
+        }
+    }
+Done:
+    kfree((void*)kernel);
+}
+
+void freeukvm2(pagetable_t kernel, uint64 sz) {
+    uvmunmap(kernel, UART0, 1, 0);
+    uvmunmap(kernel, VIRTIO0, 1, 0);
+    uvmunmap(kernel, PLIC, 0x400000 / PGSIZE, 0);
+    uvmunmap(kernel, KERNBASE, PGROUNDUP((uint64)etext - KERNBASE) / PGSIZE, 0);
+    uvmunmap(kernel, (uint64)etext, PGROUNDUP(PHYSTOP-(uint64)etext) / PGSIZE, 0);
+    uvmunmap(kernel, TRAMPOLINE, 1, 0);
+    uvmunmap(kernel, 0, PGROUNDUP(sz) / PGSIZE, 0);
+    freewalk(kernel);
+
+}
+
+void mapUvm2Ukvm(pagetable_t pagetable, pagetable_t kernelPageTable, uint64 start, uint64 sz) {
+    pte_t* user, *kernel;
+    if (start >= sz) {
+        /* this is for sbrk() */
+        uint64 npages = (PGROUNDUP(start) - PGROUNDUP(sz)) / PGSIZE;
+        uvmunmap(kernelPageTable, PGROUNDUP(sz), npages, 0);
+        return;
+    }
+    else {
+        sz = PGROUNDUP(sz);
+        for (start = PGROUNDUP(start); start != sz; start += PGSIZE) {
+            user = walk(pagetable, start, 0);
+            kernel = walk(kernelPageTable, start, 1);
+            *kernel = (*user) & ~(PTE_U | PTE_X);
+        }
+    }
+}
+/* end   pgtbl lab */
+/*--------------------------------------------------------------------*/
