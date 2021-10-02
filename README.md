@@ -5,5 +5,6 @@ my solutions and little ideas.
 - [x] Lab Utilities  
 - [x] Lab System Calls  
 - [x] Lab Page Tables 
-- [ ] Lab Traps
+- [x] Lab Traps
+- [ ] Lab Lazy allocation
 
