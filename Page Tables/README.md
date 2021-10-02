@@ -46,9 +46,9 @@ static void printPageTable(pagetable_t pagetable,int layer) {
 				continue;
 			
 			child = PTE2PA(pte);
-            ++layer;
+            		++layer;
 			printPageTable((pagetable_t)child);
-            --layer;
+            		--layer;
 		}
 	}
 }
@@ -84,7 +84,7 @@ int exec(char *path, char **argv) {
 
 ``` C
 /* 在 kernel/proc.h, struct proc 内添加域 */
-	/* typedef uint64* pagetable_t （在 kernel/riscv.h 中定义）*/
+/* typedef uint64* pagetable_t （在 kernel/riscv.h 中定义）*/
 	pagetable_t kernelPageTable;
 ```
 
@@ -126,10 +126,10 @@ static struct proc* allocproc(void) {
 	/* 建立内核映射 */
 	p->kernelPageTable = ukvmInit();
 	if (p->kernelPageTable == 0) {
-        freeproc(p);
-        release(&p->lock);
-        return 0;
-    }
+        	freeproc(p);
+       	 	release(&p->lock);
+       		return 0;
+    	}
 	/* 建立进程内核栈映射 */
   	char *pa = kalloc();
   	if(!pa)
@@ -165,23 +165,23 @@ kvminithart() {
 void scheduler(void) {
     ...
 	for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        p->state = RUNNING;
-        c->proc = p;
+      		acquire(&p->lock);
+      		if(p->state == RUNNABLE) {
+        		p->state = RUNNING;
+        		c->proc = p;
           
-        w_satp(MAKE_SATP(p->kernelPageTable));
-        sfence_vma();
+       			w_satp(MAKE_SATP(p->kernelPageTable));
+        		sfence_vma();
       
-        swtch(&c->context, &p->context);
-       	kvminithart();
+        		swtch(&c->context, &p->context);
+       			kvminithart();
         
-        c->proc = 0;
+        		c->proc = 0;
 
-        found = 1;
-      }
-      release(&p->lock);
-    }
+        		found = 1;
+      		}
+      		release(&p->lock);
+    	}		
     ...
 }
 ```
@@ -206,9 +206,9 @@ void freeukvm(pagetable_t kernel) {
   		pte = kernel[i];
 		if (pte & PTE_V) {
 			child = PTE2PA(pte);
-            ++layer;
+            		++layer;
 			freeukvm((pagetable_t)child);
-            --layer;
+           		--layer;
 		}
 	}
 Done:
@@ -225,17 +225,17 @@ Done:
   	 * 进程退出时，释放内核栈 
   	 * do_free	:= 1, 释放内核栈页面
   	 */
-  	if (p->kstack) 
-          uvmunmap(p->kernelPageTable, p->kstack, 1, 1);
-      if (p->kernelPageTable) {
+  	if (p->kstack)
+         	 uvmunmap(p->kernelPageTable, p->kstack, 1, 1);
+      	if (p->kernelPageTable) {
       	/* 
-           * 只需要释放内核页表即可，无需释放用户进程页面
-           * 因为在前几行 proc_freepagetable(p->pagetable, p->sz); 已经释放了用户进程页面
-           */
-          freeukvm(p->kernelPageTable); 
+         * 只需要释放内核页表即可，无需释放用户进程页面
+         * 因为在前几行 proc_freepagetable(p->pagetable, p->sz); 已经释放了用户进程页面
+         */
+          	freeukvm(p->kernelPageTable); 
        }
-       p->kernelPageTable = 0;
-       p->kstack = 0;
+       	p->kernelPageTable = 0;
+       	p->kstack = 0;
   	 ...
   }
   ```
@@ -295,21 +295,21 @@ int copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
  * sz 		:=	用户进程的大小 
  */
 void mapUvm2Ukvm(pagetable_t pagetable, pagetable_t kernelPageTable, uint64 start, uint64 sz) {
-    pte_t* user, *kernel;
-    if (start >= sz) {
+    	pte_t* user, *kernel;
+   	if (start >= sz) {
         /* this is for sbrk() */
-        uint64 npages = (PGROUNDUP(start) - PGROUNDUP(sz)) / PGSIZE;
-        uvmunmap(kernelPageTable, PGROUNDUP(sz), npages, 0);
-        return;
-    }
-    else {
-        sz = PGROUNDUP(sz);
-        for (start = PGROUNDUP(start); start != sz; start += PGSIZE) {
-            user = walk(pagetable, start, 0);
-            kernel = walk(kernelPageTable, start, 1);
-            *kernel = (*user) & ~PTE_U;
-        }
-    }
+        	uint64 npages = (PGROUNDUP(start) - PGROUNDUP(sz)) / PGSIZE;
+       	 	uvmunmap(kernelPageTable, PGROUNDUP(sz), npages, 0);
+       	 	return;
+    	}
+    	else {
+        	sz = PGROUNDUP(sz);
+        	for (start = PGROUNDUP(start); start != sz; start += PGSIZE) {
+           		user = walk(pagetable, start, 0);
+            		kernel = walk(kernelPageTable, start, 1);
+            		*kernel = (*user) & ~PTE_U;
+        	}
+    	}
 }
 ```
 
