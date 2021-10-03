@@ -6,5 +6,6 @@ my solutions and little ideas.
 - [x] Lab System Calls  
 - [x] Lab Page Tables 
 - [x] Lab Traps
-- [ ] Lab Lazy allocation
+- [x] Lab Lazy allocation
+- [ ] Lab Copy on write
 
