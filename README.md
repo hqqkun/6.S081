@@ -7,5 +7,6 @@ my solutions and little ideas.
 - [x] Lab Page Tables 
 - [x] Lab Traps
 - [x] Lab Lazy allocation
-- [ ] Lab Copy on write
+- [x] Lab Copy on write
+- [ ] Lab Multithreading
 
