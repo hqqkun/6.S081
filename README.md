@@ -8,5 +8,5 @@ my solutions and little ideas.
 - [x] Lab Traps
 - [x] Lab Lazy allocation
 - [x] Lab Copy on write
-- [ ] Lab Multithreading
-
+- [x] Lab Multithreading
+- [ ] Lab Clock
