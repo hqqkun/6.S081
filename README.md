@@ -9,4 +9,5 @@ my solutions and little ideas.
 - [x] Lab Lazy allocation
 - [x] Lab Copy on write
 - [x] Lab Multithreading
-- [ ] Lab Clock
+- [x] Lab Clock
+- [ ] Lab File System
