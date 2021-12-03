@@ -16,3 +16,13 @@ MIT，操作系统
 - [x]  Clock
 - [x]  File System
 - [x]  Mmap
+
+## 实验环境搭建
+
+### 平台
+
+`ubuntu-20.04`
+
+[Ubuntu 官网最新版](https://ubuntu.com/download/desktop)
+
+[Ubuntu 镜像下载](https://launchpad.net/ubuntu/+cdmirrors)
