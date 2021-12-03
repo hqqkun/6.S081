@@ -26,3 +26,9 @@ MIT，操作系统
 [Ubuntu 官网最新版](https://ubuntu.com/download/desktop)
 
 [Ubuntu 镜像下载](https://launchpad.net/ubuntu/+cdmirrors)
+
+### 安装实验环境
+
+```shell
+$ sudo apt-get install git build-essential gdb-multiarch qemu-system-misc gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu
+```
