@@ -9,8 +9,8 @@ MIT，操作系统
 ## 实验进度
 
 - [x] [Utilities](https://github.com/hqqkun/6.S081/tree/main/Utilities)
-- [x]  [System Calls](https://github.com/hqqkun/6.S081/tree/main/System Calls)
-- [x]  [Page Tables](https://github.com/hqqkun/6.S081/tree/main/Page Tables)
+- [x] [System Calls](https://github.com/hqqkun/6.S081/tree/main/System Calls)
+- [x] [Page Tables](https://github.com/hqqkun/6.S081/tree/main/Page Tables)
 - [x] [Traps](https://github.com/hqqkun/6.S081/tree/main/Traps)
 - [x] [Lazy Allocation](https://github.com/hqqkun/6.S081/tree/main/Lazy allocation)
 - [x] [Copy On Write](https://github.com/hqqkun/6.S081/tree/main/Copy-on-Write Fork)
